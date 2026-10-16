@@ -1,68 +1,97 @@
-const playerCar = document.getElementById('player-car');
 const gameContainer = document.getElementById('game-container');
 const scoreElement = document.getElementById('score');
 
-let playerX = 125; // الموضع الأفقي الأولي لسيارة اللاعب
 let score = 0;
 let gameOver = false;
+let gameSpeed = 4;
 
-// تحريك سيارة اللاعب بالأسهم
+// إنشاء سيارة اللاعب برمجياً
+const player = document.createElement('div');
+player.style.position = 'absolute';
+player.style.width = '45px';
+player.style.height = '85px';
+player.style.backgroundColor = '#ff3333'; // لون سيارة اللاعب (أحمر)
+player.style.bottom = '20px';
+player.style.left = '135px';
+player.style.borderRadius = '8px';
+player.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+gameContainer.appendChild(player);
+
+let playerX = 135;
+
+// التحكم بالحركة عبر أزرار الكيبورد
 document.addEventListener('keydown', (e) => {
   if (gameOver) return;
-  
-  if (e.key === 'ArrowLeft' && playerX > 10) {
-    playerX -= 20; // تحريك لليسار
-  } else if (e.key === 'ArrowRight' && playerX < 240) {
-    playerX += 20; // تحريك لليمين
+  if (e.key === 'ArrowLeft' && playerX > 15) {
+    playerX -= 25;
+  } else if (e.key === 'ArrowRight' && playerX < 260) {
+    playerX += 25;
   }
-  playerCar.style.left = playerX + 'px';
+  player.style.left = playerX + 'px';
 });
 
-// إنشاء سيارة منافسة
-const enemyCar = document.createElement('img');
-enemyCar.src = 'images/enemy.png';
-enemyCar.classList.add('enemy-car');
-enemyCar.style.left = Math.floor(Math.random() * 230) + 'px';
-gameContainer.appendChild(enemyCar);
+// إنشاء سيارة العدو والمنافس برمجياً
+const enemy = document.createElement('div');
+enemy.style.position = 'absolute';
+enemy.style.width = '45px';
+enemy.style.height = '85px';
+enemy.style.backgroundColor = '#3366ff'; // لون سيارة المنافس (أزرق)
+enemy.style.top = '-100px';
+enemy.style.left = Math.floor(Math.random() * 245) + '15px';
+enemy.style.borderRadius = '8px';
+gameContainer.appendChild(enemy);
 
 let enemyY = -100;
-let enemySpeed = 5;
+let enemyX = Math.floor(Math.random() * 245) + 15;
+enemy.style.left = enemyX + 'px';
 
-// حلقة اللعبة (Game Loop)
-function updateGame() {
+// تحريك خطوط الطريق لإعطاء شعور بالحركة
+const roadLines = document.querySelectorAll('.road-line');
+
+function updateRoad() {
+  roadLines.forEach(line => {
+    let currentTop = parseInt(line.style.top);
+    currentTop += gameSpeed;
+    if (currentTop > 500) currentTop = -60;
+    line.style.top = currentTop + 'px';
+  });
+}
+
+// حلقة اللعبة الأساسية (Game Loop)
+function gameLoop() {
   if (gameOver) return;
 
-  // تحريك سيارة المنافس للأسفل
-  enemyY += enemySpeed;
-  enemyCar.style.top = enemyY + 'px';
+  updateRoad();
 
-  // إعادة سيارة المنافس للأعلى عند خروجها وحساب النقاط
+  // تحريك سيارة المنافس للأسفل
+  enemyY += gameSpeed;
   if (enemyY > 500) {
     enemyY = -100;
-    enemyCar.style.left = Math.floor(Math.random() * 230) + 'px';
+    enemyX = Math.floor(Math.random() * 245) + 15; // تغيير مكان ظهور العدو عشوائياً
+    enemy.style.left = enemyX + 'px';
     score += 10;
     scoreElement.innerText = score;
-    enemySpeed += 0.5; // زيادة السرعة تدريجياً
+    gameSpeed += 0.2; // زيادة السرعة تدريجياً مع زيادة النقاط
   }
+  enemy.style.top = enemyY + 'px';
 
-  // فحص الاصطدام (Collision Detection)
-  const playerRect = playerCar.getBoundingClientRect();
-  const enemyRect = enemyCar.getBoundingClientRect();
+  // فحص الاصطدام بدقة بين سيارتك وسيارة المنافس
+  const pRect = player.getBoundingClientRect();
+  const eRect = enemy.getBoundingClientRect();
 
   if (
-    playerRect.left < enemyRect.right &&
-    playerRect.right > enemyRect.left &&
-    playerRect.top < enemyRect.bottom &&
-    playerRect.bottom > enemyRect.top
+    pRect.left < eRect.right &&
+    pRect.right > eRect.left &&
+    pRect.top < eRect.bottom &&
+    pRect.bottom > eRect.top
   ) {
     gameOver = true;
     alert('انتهت اللعبة! مجموع نقاطك: ' + score);
-    window.location.reload(); // إعادة تشغيل اللعبة
+    window.location.reload(); // إعادة تشغيل اللعبة تلقائياً
   }
 
-  requestAnimationFrame(updateGame);
+  requestAnimationFrame(gameLoop);
 }
 
-// بدء حلقة اللعبة
-updateGame();
-
+// بدء تشغيل اللعبة
+gameLoop();
