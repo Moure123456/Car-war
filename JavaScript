@@ -1,1 +1,68 @@
+const playerCar = document.getElementById('player-car');
+const gameContainer = document.getElementById('game-container');
+const scoreElement = document.getElementById('score');
+
+let playerX = 125; // الموضع الأفقي الأولي لسيارة اللاعب
+let score = 0;
+let gameOver = false;
+
+// تحريك سيارة اللاعب بالأسهم
+document.addEventListener('keydown', (e) => {
+  if (gameOver) return;
+  
+  if (e.key === 'ArrowLeft' && playerX > 10) {
+    playerX -= 20; // تحريك لليسار
+  } else if (e.key === 'ArrowRight' && playerX < 240) {
+    playerX += 20; // تحريك لليمين
+  }
+  playerCar.style.left = playerX + 'px';
+});
+
+// إنشاء سيارة منافسة
+const enemyCar = document.createElement('img');
+enemyCar.src = 'images/enemy.png';
+enemyCar.classList.add('enemy-car');
+enemyCar.style.left = Math.floor(Math.random() * 230) + 'px';
+gameContainer.appendChild(enemyCar);
+
+let enemyY = -100;
+let enemySpeed = 5;
+
+// حلقة اللعبة (Game Loop)
+function updateGame() {
+  if (gameOver) return;
+
+  // تحريك سيارة المنافس للأسفل
+  enemyY += enemySpeed;
+  enemyCar.style.top = enemyY + 'px';
+
+  // إعادة سيارة المنافس للأعلى عند خروجها وحساب النقاط
+  if (enemyY > 500) {
+    enemyY = -100;
+    enemyCar.style.left = Math.floor(Math.random() * 230) + 'px';
+    score += 10;
+    scoreElement.innerText = score;
+    enemySpeed += 0.5; // زيادة السرعة تدريجياً
+  }
+
+  // فحص الاصطدام (Collision Detection)
+  const playerRect = playerCar.getBoundingClientRect();
+  const enemyRect = enemyCar.getBoundingClientRect();
+
+  if (
+    playerRect.left < enemyRect.right &&
+    playerRect.right > enemyRect.left &&
+    playerRect.top < enemyRect.bottom &&
+    playerRect.bottom > enemyRect.top
+  ) {
+    gameOver = true;
+    alert('انتهت اللعبة! مجموع نقاطك: ' + score);
+    window.location.reload(); // إعادة تشغيل اللعبة
+  }
+
+  requestAnimationFrame(updateGame);
+}
+
+// بدء حلقة اللعبة
+updateGame();
 
